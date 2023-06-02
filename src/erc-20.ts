@@ -1,4 +1,5 @@
 import {Transfer} from "../generated/ERC20/ERC20"
+import {parseTrade} from "./trade";
 import {TokenBalance, PintswapTransfer} from "../generated/schema"
 import {
   fetchTokenDetails,
