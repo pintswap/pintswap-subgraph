@@ -1,74 +1,62 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+//import event class from generated files
+import {Transfer} from "../generated/ERC20/ERC20"
+//import entities
+import {TokenBalance} from "../generated/schema"
+//import the functions defined in utils.ts
 import {
-  ERC20,
-  Paused,
-  Unpaused,
-  PauserAdded,
-  PauserRemoved,
-  Transfer,
-  Approval
-} from "../generated/ERC20/ERC20"
-import { ExampleEntity } from "../generated/schema"
+  fetchTokenDetails,
+  fetchAccount,
+  fetchBalance
+} from "./utils"
+//import datatype
+import { BigDecimal} from "@graphprotocol/graph-ts";
 
-export function handlePaused(event: Paused): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from.toHex())
+export function handleTransfer(event: Transfer): void {
+    let token = fetchTokenDetails(event);
+    if (!token) { //if token == null
+        return
+      }
 
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-  if (!entity) {
-    entity = new ExampleEntity(event.transaction.from.toHex())
+    //get account addresses from event
+    let fromAddress = event.params.from.toHex();
+    let toAddress = event.params.to.toHex();
 
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
-  }
+    //fetch account details
+    let fromAccount = fetchAccount(fromAddress);
+    let toAccount = fetchAccount(toAddress);
 
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
+    if (!fromAccount || !toAccount) {
+    return;
+    }
 
-  // Entity fields can be set based on event parameters
-  entity.account = event.params.account
+    //setting the token balance of the 'from' account
+    let fromTokenBalance = TokenBalance.load(token.id + "-" + fromAccount.id);
+    if (!fromTokenBalance) { //if balance is not already saved
+                    //create a new TokenBalance instance
+                    // while creating the new token balance,
+                    // the combination of the token address 
+                    // and the account address is  
+                    // passed as the identifier value
+          fromTokenBalance = new TokenBalance(token.id + "-" + fromAccount.id);
+          fromTokenBalance.token = token.id;
+          fromTokenBalance.account = fromAccount.id;
+    }
 
-  // Entities can be written to the store with `.save()`
-  entity.save()
-
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
-
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // - contract.name(...)
-  // - contract.approve(...)
-  // - contract.totalSupply(...)
-  // - contract.transferFrom(...)
-  // - contract.decimals(...)
-  // - contract.increaseAllowance(...)
-  // - contract.isPauser(...)
-  // - contract.paused(...)
-  // - contract.balanceOf(...)
-  // - contract.symbol(...)
-  // - contract.decreaseAllowance(...)
-  // - contract.transfer(...)
-  // - contract.allowance(...)
+    fromTokenBalance.amount = fetchBalance(event.address,event.params.from)
+        //filtering out zero-balance tokens - optional
+    if(fromTokenBalance.amount != BigDecimal.fromString("0")){
+      fromTokenBalance.save();
+    }
+    
+    //setting the token balance of the 'to' account
+    let toTokenBalance = TokenBalance.load(token.id + "-" + toAccount.id);
+    if (!toTokenBalance) {
+        toTokenBalance = new TokenBalance(token.id + "-" + toAccount.id);
+        toTokenBalance.token = token.id;
+        toTokenBalance.account = toAccount.id;
+      }
+    toTokenBalance.amount = fetchBalance(event.address,event.params.to)
+    if(toTokenBalance.amount != BigDecimal.fromString("0")){
+      toTokenBalance.save();
+    }
 }
-
-export function handleUnpaused(event: Unpaused): void {}
-
-export function handlePauserAdded(event: PauserAdded): void {}
-
-export function handlePauserRemoved(event: PauserRemoved): void {}
-
-export function handleTransfer(event: Transfer): void {}
-
-export function handleApproval(event: Approval): void {}
