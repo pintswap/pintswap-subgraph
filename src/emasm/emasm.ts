@@ -102,7 +102,7 @@ const firstPass = (
     }
     if (!isNaN(v)) {
       const bn = coerceToBN(v);
-      const length = getByteLengthbn) || 1;
+      const length = getByteLength(bn)) || 1;
       if (length > 32) throw Error("constant integer overflow: " + v);
       return pushBytes(r, encodePush(bn, length));
     }

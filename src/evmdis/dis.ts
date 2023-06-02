@@ -8,7 +8,7 @@ export function leftZeroPad(s: string, n: number): string {
   return Array(Math.max(1, n - s.length + 1)).join('0') + s;
 }
 
-export default function dis(bytes: string): any[] {
+export function dis(bytes: string): any[] {
   bytes = addHexPrefix(bytes).substr(2);
   const bytesArray = Array.apply(null, { length: bytes.length / 2 }).map((_, i) => bytes.substr(i*2, 2));
   let i = 0;
@@ -20,5 +20,8 @@ export default function dis(bytes: string): any[] {
     seqs.push([ addHexPrefix(leftZeroPad(addrHex, addrHex.length + (addrHex.length % 2))), op[0], (bytesAppended ? '0x' + bytesAppended : ''), addHexPrefix(bytesArray[i]) ]);
     i += 1 + op[op.length - 1];
   }
-  return seqs.map(([ addrHex, op, bytes, opByte ]) => [ op, opByte, addrHex, addHexPrefix(bytes) ]);
+  return seqs.map((v: any): any => {
+    const [ addrHex, op, bytes, opByte ] = v;
+    return [ op, opByte, addrHex, addHexPrefix(bytes) ]
+  });
 };

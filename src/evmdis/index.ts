@@ -4,7 +4,7 @@ import { stripReachable } from ".//util";
 import { decorateJumps } from "./solidity";
 import { segment } from "./segment";
 import { annotate } from "./annotate";
-import dis from "./dis";
+import { dis } from "./dis";
 
 export function disassembleAndSegment(bytecode: string): any {
   return annotate(stripReachable(decorateJumps(segment(dis(bytecode)))));

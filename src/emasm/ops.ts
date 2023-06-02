@@ -1,8 +1,4 @@
-interface OpcodeTable {
-  [key: string]: string;
-}
-
-export const OPS: OpcodeTable = {
+export const OPS: any = {
   stop: "00",
   add: "01",
   mul: "02",
@@ -112,5 +108,5 @@ export const OPS: OpcodeTable = {
   shr: "1c",
   sar: "1d",
   rol: "1e",
-  ror: "1f"
+  ror: "1f",
 };

@@ -14,7 +14,8 @@ export function segment(disasm: any): any {
   let dest = ['entry'];
   let func = null;
   let unreachableSegments = 0;
-  for (const [ instruction, byte, offset, data ] of disasm) {
+  for (const v of disasm) {
+    const [ instruction, byte, offset, data ] = v;
     if (instruction === 'JUMPDEST') {
       if (dest[0].match(/^unreachable/)) dest = [];
       dest.push(padToBytes2(offset));
@@ -31,7 +32,7 @@ export function segment(disasm: any): any {
   return jumpdests;
 }
 
-export function decorateUnreachableSegments(unreachables: any) {
+export function decorateUnreachableSegments(unreachables: any): void {
   Object.keys(unreachables).forEach((v) => {
     unreachables[v].toBytes = function () {
       return ('0x' + this.reduce((r, v) => {

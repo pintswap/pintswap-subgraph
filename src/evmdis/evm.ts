@@ -1,8 +1,6 @@
 'use strict';
-
-type InstructionTableEntry = string | number | null;
 interface InstructionsTable {
-  [key: string]: InstructionTableEntry[];
+  [key: string]: any[];
 }
 
 const instructions: InstructionsTable = {
