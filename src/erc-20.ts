@@ -63,5 +63,6 @@ export function handleTransfer(event: Transfer): void {
       transfer.fromAccount = fromAccount.id;
       transfer.toAccount = toAccount.id;
       transfer.pintswapTrade = isPsTrade !== false ? true : false;
+      transfer.save();
     }
 }
