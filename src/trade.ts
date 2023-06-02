@@ -4,55 +4,98 @@ import * as evmdis from "./evmdis";
 export const addHexPrefix = (s) => (s.substr(0, 2) === "0x" ? s : "0x" + s);
 export type Instruction = string[];
 type CheckOpType = (op: string) => string;
-type TransferResult = {
+
+interface TransferResultData {
+  token: string;
+  to: string;
+  from: string;
+  amount: string;
+}
+
+interface TransferResult {
+  success: boolean;
   tail: Instruction[];
-  data: {
-    token: string;
-    to: string;
-    from: string;
-    amount: string;
-  }
+  data: TransferResultData;
 };
-type Offer = {
+interface Offer {
   token: string;
   amount: string;
 }
-type ParseTradeResult = {
+interface ParseTradeResult {
+  success: boolean;
   gets: Offer;
   gives: Offer;
   maker: string;
   taker: string;
   chainId: number;
 };
-type TailResult = {
-  tail: Instruction[]
+interface TailResult {
+  success: boolean;
+  tail: Instruction[];
 };
 
-export const stripHexPrefix = (s) =>
+const NULL_TRADE_RESULT: TradeResult = {
+  success: false,
+  gets: {
+    token: '',
+    amount: ''
+  },
+  gives: {
+    token: '',
+    amount: ''
+  },
+  maker: '',
+  taker: '',
+  chainId: 0
+};
+
+const NULL_TRANSFER_RESULT: TransferResult = {
+  success: false,
+  tail: [],
+  data: {
+    token: '',
+    amount: '',
+    to: '',
+    from: ''
+  }
+};
+
+const NULL_TAIL_RESULT: TailResult = {
+  success: false,
+  tail: []
+};
+
+
+export const stripHexPrefix = (s: string): string =>
   s.substr(0, 2) === "0x" ? s.substr(2) : s;
 
-const getUint = (v: number) => BigInt(v);
+const getUint = (v: number): BigInt => BigInt(v);
 
 const stripZerosLeft = (v: string) => (v.substr(0, 2) === '0x' ? '0x' : '') + stripHexPrefix(v).replace(/^0+/, '');
 
-const zeroPadBytes = (v: string, n: number): string => ((v) => v + '0'.repeat(2*((v.length / 2) - n)))(addHexPrefix(stripHexPrefix(v)))
+const zeroPadBytes = (v: string, n: number): string => {
+  const fixed = addHexPrefix(stripHexPrefix(v));
+  return fixed + '0'.repeat(2*((Number(fixed.length / 2)) - Number(n)));
+};
 
-const getAddress = (v: string): string => addHexPrefix(v.substr(-40));
+const getAddress = (v: string): string => v;
 
 export const leftZeroPad = (s: string, n: number): string => {
-  return "0".repeat(n - s.length) + s;
+  return "0".repeat(Number(n) - Number(s.length)) + s;
 }
 
 import { WETH_ADDRESSES } from "./WETH9";
 
-export const toWETH = (chainId: number) => {
+export const toWETH = (chainId: number): string => {
   if (!chainId) chainId = 1;
   const chain = String(chainId);
-  const address = WETH_ADDRESSES[chain];
+  const address = WETH_ADDRESSES[chain] || '';
   return address;
 };
 
-export const numberToHex = (v: number): string => addHexPrefix(Buffer.from(new Uint32Array([v])).toString('hex'));
+export const numberToHex = (v: number): string => {
+  return addHexPrefix(Buffer.from(new Uint32Array([v])).toString('hex'));
+};
 
 
 const makeCheckOp = (ary: Instruction[]): CheckOpType => (op: string): string => {
@@ -69,8 +112,8 @@ const makeCheckOp = (ary: Instruction[]): CheckOpType => (op: string): string =>
 export const parsePermit2 = (disassembly: Instruction[], first: boolean): TransferResult => {
   if (!first) first = false;
   const ops = disassembly.slice();
-  const checkOp = makeCheckOp(ops);
-  const parsed = [
+  const checkOp: (op: string) => string = makeCheckOp(ops);
+  const parsed: string[] = [
     first ? "PC" : "PUSH1",
     first ? "RETURNDATASIZE" : "PUSH1",
     "PUSH2",
@@ -120,16 +163,17 @@ export const parsePermit2 = (disassembly: Instruction[], first: boolean): Transf
     "CALL",
   ]
     .concat(first ? [] : ["AND"])
-    .map((v) => checkOp(v));
+    .map((v: string): string => checkOp(v));
   if (
-    parsed.find((v) => v === 'false') === 'false' ||
+    parsed.find((v: string): boolean => v === 'false') === 'false' ||
     parsed[2] !== "0x0184" ||
     parsed[5] !== "0x22d473030f116ddee9f6b43ac78ba3" ||
     parsed[7] !==
       "0x30f28b7a00000000000000000000000000000000000000000000000000000000"
   )
-    return null;
+    return NULL_TRANSFER_RESULT;
   return {
+    success: true,
     tail: disassembly.slice(parsed.length),
     data: {
       token: getAddress(parsed[10]),
@@ -144,20 +188,21 @@ const parseTransfer = (disassembly: Instruction[], chainId: number, first: boole
   if (!first) first = false;
   if (!chainId) chainId = 1;
   const transferFrom = parseTransferFrom(disassembly, first);
-  const transfer = !transferFrom && parsePermit2(disassembly, first);
-  if (!transfer && !transferFrom) return null;
-  const withdraw = transfer && transfer.data.token === getAddress(toWETH(chainId)) && parseWithdraw(transfer.tail);
+  const transfer = !transferFrom.success && parsePermit2(disassembly, first);
+  if (!transfer.success && !transferFrom.success) return NULL_TRANSFER_RESULT;
+  const withdraw = transfer.success && transfer.data.token === getAddress(toWETH(chainId)) && parseWithdraw(transfer.tail, false);
   const sendEther =
-    withdraw && parseSendEther(withdraw.tail);
+    withdraw.success && parseSendEther(withdraw.tail, false);
   if (
-    transfer &&
+    transfer.success &&
     transfer.data.token === getAddress(toWETH(chainId)) &&
-    !(sendEther && withdraw)
+    !(sendEther.success && withdraw.success)
   )
-    return null;
-  const data = transferFrom && transferFrom.data || transfer && transfer.data;
-  const tail = sendEther && sendEther.tail || (transfer || transferFrom).tail
+    return NULL_TRANSFER_RESULT;
+  const data = transferFrom.success && transferFrom.data || transfer.success && transfer.data;
+  const tail = sendEther.success && sendEther.tail || (transfer.success && transfer.tail || transferFrom.success && transferFrom.tail);
   return {
+    success: true,
     data: data,
     tail: tail
   };
@@ -165,18 +210,19 @@ const parseTransfer = (disassembly: Instruction[], chainId: number, first: boole
 
 
 
+
 export const parseTrade = (bytecode: string, chainId: number): ParseTradeResult => {
   if (!chainId) chainId = 1;
-  const disassembly = evmdis.disassemble(bytecode);
+  const disassembly: Instruction[] = evmdis.disassemble(bytecode);
   const firstPermit = parsePermit(disassembly, true);
   const secondPermit = firstPermit && parsePermit(firstPermit.tail, false);
-  const firstTransfer = parseTransfer(secondPermit && secondPermit.tail || firstPermit && firstPermit.tail || disassembly, chainId, !firstPermit);
-  if (!firstTransfer) return null;
+  const firstTransfer = parseTransfer(secondPermit.success && secondPermit.tail || firstPermit.success && firstPermit.tail || disassembly, chainId, !firstPermit.success);
+  if (!firstTransfer) return NULL_TRADE_RESULT;
   const secondTransfer = parseTransfer(firstTransfer.tail, chainId, false);
-  if (!secondTransfer) return null;
+  if (!secondTransfer) return NULL_TRADE_RESULT;
   const ops = secondTransfer.tail.slice();
-  const checkOp = makeCheckOp(ops);
-  const parsed = [
+  const checkOp: (op: string) => string = makeCheckOp(ops);
+  const parsed: string[] = [
     "ISZERO",
     "PUSH2",
     "JUMPI",
@@ -186,42 +232,26 @@ export const parseTrade = (bytecode: string, chainId: number): ParseTradeResult 
     "PUSH1",
     "PUSH1",
     "REVERT",
-  ].map((v) => checkOp(v));
+  ].map((v: string): string => checkOp(v));
   if (
     parsed.find((v) => v === 'false') === 'false' ||
     parsed.slice(6, 7).find((v) => v !== "0x00")
   )
-    return null;
+    return NULL_TRADE_RESULT;
   const tail = ops.slice(parsed.length);
-  if (tail.length !== 0) return null;
-  const data = {
-    firstPermit: firstPermit && firstPermit.data,
-    secondPermit: secondPermit && secondPermit.data,
-    firstTransfer: firstTransfer.data,
-    secondTransfer: secondTransfer.data,
+  if (tail.length !== 0) return NULL_TRADE_RESULT;
+  const taker = firstTransfer.data.from;
+  const maker = secondTransfer.data.from;
+  const gets: Offer = {
+    token: firstTransfer.data.token,
+    amount: firstTransfer.data.amount
   };
-  let permitData = null;
-  if (firstPermit) {
-    permitData = {};
-    if (secondPermit) {
-      permitData.maker = firstPermit.data;
-      permitData.taker = secondPermit.data;
-    } else {
-      if (firstPermit.data.token === (firstTransfer.data.transferFrom || firstTransfer.data.transfer).token) permitData.taker = firstPermit.data;
-      else permitData.maker = firstPermit.data;
-    }
-  }
-  const taker = (firstTransfer.data.transfer || firstTransfer.data.transferFrom).from;
-  const maker = (secondTransfer.data.transfer || secondTransfer.data.transferFrom).from;
-  const gets = {
-    token: (firstTransfer.data.transfer || firstTransfer.data.transferFrom).token,
-    amount: (firstTransfer.data.transfer || firstTransfer.data.transferFrom).amount
-  };
-  const gives = {
-    token: (secondTransfer.data.transfer || secondTransfer.data.transferFrom).token,
-    amount: (secondTransfer.data.transfer || secondTransfer.data.transferFrom).amount
+  const gives: Offer = {
+    token: secondTransfer.data.token,
+    amount: secondTransfer.data.amount
   };
   return {
+    success: true,
     gets,
     gives,
     maker,
@@ -234,8 +264,8 @@ export const parseWithdraw = (disassembly: Instruction[], chainId: number, first
   if (!chainId) chainId = 1;
   if (!first) first = false;
   const ops = disassembly.slice();
-  const checkOp = makeCheckOp(ops);
-  const parsed = [
+  const checkOp: (op: string) => string = makeCheckOp(ops);
+  const parsed: string[] = [
     first ? "PC" : "PUSH1",
     first ? "RETURNDATASIZE" : "PUSH1",
     "PUSH1",
@@ -252,7 +282,7 @@ export const parseWithdraw = (disassembly: Instruction[], chainId: number, first
     "CALL",
   ]
     .concat(first ? [] : ["AND"])
-    .map((v) => checkOp(v));
+    .map((v: string): string => checkOp(v));
   if (
     parsed[2] !== "0x24" ||
     getAddress(parsed[5]) !== getAddress(toWETH(chainId)) ||
@@ -260,8 +290,9 @@ export const parseWithdraw = (disassembly: Instruction[], chainId: number, first
       "0x2e1a7d4d00000000000000000000000000000000000000000000000000000000" ||
     parsed[11] !== "0x04"
   )
-    return null;
+    return NULL_TAIL_RESULT;
   return {
+    success: true,
     tail: disassembly.slice(parsed.length),
   };
 };
@@ -269,8 +300,8 @@ export const parseWithdraw = (disassembly: Instruction[], chainId: number, first
 export const parsePermit = (disassembly: Instruction[], first: boolean): TailResult => {
   if (!first) first = false;
   const ops = disassembly.slice();
-  const checkOp = makeCheckOp(ops);
-  const parsed = [
+  const checkOp: (op: string) => string = makeCheckOp(ops);
+  const parsed: string[] = [
     first ? "PC" : "PUSH1",
     first ? "RETURNDATASIZE" : "PUSH1",
     "PUSH1",
@@ -305,14 +336,15 @@ export const parsePermit = (disassembly: Instruction[], first: boolean): TailRes
     "CALL",
   ]
     .concat(first ? [] : ["AND"])
-    .map((v) => checkOp(v));
+    .map((v: string): string => checkOp(v));
   if (
     parsed[2] !== "0xe4" ||
     parsed[7] !== "0xd505accf00000000000000000000000000000000000000000000000000000000" ||
     parsed[11] !== "0x04"
   )
-    return null;
+    return NULL_TAIL_RESULT;
   return {
+    success: true,
     tail: disassembly.slice(parsed.length),
   };
 };
@@ -320,8 +352,8 @@ export const parsePermit = (disassembly: Instruction[], first: boolean): TailRes
 export const parseTransferFrom = (disassembly: Instruction[], first: boolean): TransferResult => {
   if (!first) first = false;
   const ops = disassembly.slice();
-  const checkOp = makeCheckOp(ops);
-  const parsed = [
+  const checkOp: (op: string) => string = makeCheckOp(ops);
+  const parsed: string[] = [
     first ? "PC" : "PUSH1",
     first ? "RETURNDATASIZE" : "PUSH1",
     "PUSH1",
@@ -344,15 +376,16 @@ export const parseTransferFrom = (disassembly: Instruction[], first: boolean): T
     "CALL"
   ]
     .concat(first ? [] : ["AND"])
-    .map((v) => checkOp(v));
+    .map((v: string): string => checkOp(v));
   if (
     parsed[2] !== "0x64" ||
     parsed[7] !==
       "0x23b872dd00000000000000000000000000000000000000000000000000000000" ||
     parsed[11] !== "0x04"
   )
-    return null;
+    return NULL_TRANSFER_RESULT;
   return {
+    success: true,
     data: {
       token: getAddress(parsed[5]),
       from: getAddress(parsed[10]),
@@ -366,7 +399,7 @@ export const parseTransferFrom = (disassembly: Instruction[], first: boolean): T
 
 export function parseSendEther(disassembly: Instruction[]): TailResult {
   const ops = disassembly.slice();
-  const checkOp = makeCheckOp(ops);
+  const checkOp: (op: string) => string = makeCheckOp(ops);
   const parsed = [
     "PUSH1",
     "PUSH1",
@@ -377,9 +410,10 @@ export function parseSendEther(disassembly: Instruction[]): TailResult {
     "GAS",
     "CALL",
     "AND",
-  ].map((v) => checkOp(v));
-  if (parsed.find((v) => v === 'false') === 'false' || parsed.slice(0, 4).find((v) => v !== "0x00")) return null;
+  ].map((v: string): string => checkOp(v));
+  if (parsed.find((v) => v === 'false') === 'false' || parsed.slice(0, 4).find((v) => v !== "0x00")) return NULL_TAIL_RESULT;
   return {
+    success: true,
     tail: disassembly.slice(parsed.length)
   };
 }
