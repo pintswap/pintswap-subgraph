@@ -21,7 +21,10 @@ export function dis(bytes: string): any[] {
     i += 1 + op[op.length - 1];
   }
   return seqs.map((v: any): any => {
-    const [ addrHex, op, bytes, opByte ] = v;
+    const addrHex = v[0];
+    const op = v[1];
+    const bytes = v[2];
+    const opByte = v[3];
     return [ op, opByte, addrHex, addHexPrefix(bytes) ]
   });
 };

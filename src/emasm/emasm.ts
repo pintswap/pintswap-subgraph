@@ -102,7 +102,7 @@ const firstPass = (
     }
     if (!isNaN(v)) {
       const bn = coerceToBN(v);
-      const length = getByteLength(bn)) || 1;
+      const length = getByteLength(bn) || 1;
       if (length > 32) throw Error("constant integer overflow: " + v);
       return pushBytes(r, encodePush(bn, length));
     }
@@ -113,9 +113,11 @@ const firstPass = (
 
 const compact = (meta: any): any => {
   let rerun = false;
-  const { bytesPtrLabels, labels, bytesSizeLabels } = meta;
+  const bytesPtrLabels = meta.bytesPtrLabels;
+  const labels = meta.labels;
+  const bytesSizeLabels = meta.bytesSizeLabels;
   Object.keys(bytesPtrLabels).forEach((label) => {
-    const byteLength = getByteLengthbytesPtrLabels[label].value)|| 1;
+    const byteLength = getByteLength(bytesPtrLabels[label].value)|| 1;
     if (byteLength < bytesPtrLabels[label].sizeof) {
       bytesPtrLabels[label].sizeof = byteLength;
       rerun = true;
@@ -123,7 +125,7 @@ const compact = (meta: any): any => {
   });
   Object.keys(labels).forEach((label) => {
     if (!labels[label].sizeof) return;
-    const byteLength = getByteLengthlabels[label].value) || 1;
+    const byteLength = getByteLength(labels[label].value) || 1;
     if (byteLength < labels[label].sizeof) {
       labels[label].sizeof = byteLength;
       rerun = true;
@@ -143,14 +145,12 @@ const compact = (meta: any): any => {
   return meta;
 };
 
-const annotateWithSizes = ({
-  labels: any,
-  bytesLabels: any,
-  bytesPtrLabels: any,
-  bytesSizeLabels: any,
-  jumpdestLabels: any,
-  segmentOrder: any,
-}): any => {
+const annotateWithSizes = (o: any): any => {
+  const labels = o.labels;
+  const byetsLabels = o.bytesLabels;
+  const bytesSizeLabels = o.bytesSizeLabels;
+  const jumpdestLabels = o.jumpdestLabels;
+  const segmentOrder = o.segmentOrder;
   let total = 0;
   segmentOrder.forEach((label) => {
     if (jumpdestLabels[label]) {
@@ -180,16 +180,13 @@ const annotateWithSizes = ({
   });
 };
 
-const encodeDynamicSlots = (
-  {
-    bytesPtrLabels,
-    bytesSizeLabels,
-    bytesLabels,
-    segmentOrder,
-    jumpdestLabels,
-    labels,
-  }: any
-): any => {
+const encodeDynamicSlots = (o: any): void => {
+  const bytesPtrLabels = o.bytesPtrLabels;
+  const bytesSizeLables = o.bytesSizeLabels;
+  const bytesLabels = o.bytesLabels;
+  const segmentOrder = o.segmentOrder;
+  const jumpdestLabels = o.jumpdestLabels;
+  const labels = o.labels;
   segmentOrder.forEach((v) => {
     if (!labels[v]) return;
     if (jumpdestLabels[v])
@@ -250,6 +247,7 @@ export const emasm = (ast: ary[]): string => {
   annotateWithSizes(meta);
   compact(meta);
   encodeDynamicSlots(meta);
-  const { labels, segmentOrder } = meta;
+  const labels = meta.labels;
+  const segmentOrder = meta.segmentOrder;
   return addHexPrefix(segmentOrder.map((v) => labels[v].join("")).join(""));
 };

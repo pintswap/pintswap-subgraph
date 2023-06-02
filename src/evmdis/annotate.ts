@@ -34,7 +34,8 @@ export function annotateSegment(segment: any): any {
     stack.unshift('local' + String(vars) + (annotation && '(' + annotation + ')' || ''));
   };
   segment.forEach((v: any) => {
-    const [ instruction, data ]= v;
+    const instruction = v[0];
+    const data = v[1];
     const lookup = lookupTable[instruction] || { pop: 0, push: 0 };
     fillStack(lookup.pop);
     if (instruction.match('DUP')) {

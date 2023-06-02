@@ -15,7 +15,10 @@ export function segment(disasm: any): any {
   let func = null;
   let unreachableSegments = 0;
   for (const v of disasm) {
-    const [ instruction, byte, offset, data ] = v;
+    const instruction = v[0];
+    const byte = v[1];
+    const offset = v[2];
+    const data = v[3];
     if (instruction === 'JUMPDEST') {
       if (dest[0].match(/^unreachable/)) dest = [];
       dest.push(padToBytes2(offset));
