@@ -6,8 +6,7 @@ import {
   fetchBalance
 } from "./utils"
 import { BigDecimal} from "@graphprotocol/graph-ts";
-import { parseTrade } from "@pintswap/sdk";
-import { JSONValue } from "@graphprotocol/graph-ts";
+import { ethereum } from "@graphprotocol/graph-ts";
 
 export function handleTransfer(event: Transfer): void {
     let token = fetchTokenDetails(event);
@@ -58,11 +57,10 @@ export function handleTransfer(event: Transfer): void {
     let transfer = PintswapTransfer.load(`${event.transaction.hash}`);
     if (!transfer) {
       transfer = new PintswapTransfer(`${event.transaction.hash}`)
-      let isPsTrade = parseTrade(event.transaction.input);
       transfer.token = token.id;
       transfer.fromAccount = fromAccount.id;
       transfer.toAccount = toAccount.id;
-      transfer.pintswapTrade = isPsTrade !== false ? true : false;
+      transfer.bytes = event.transaction.input;
       transfer.save();
     }
 }

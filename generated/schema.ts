@@ -29,13 +29,21 @@ export class Token extends Entity {
     }
   }
 
+  static loadInBlock(id: string): Token | null {
+    return changetype<Token | null>(store.get_in_block("Token", id));
+  }
+
   static load(id: string): Token | null {
     return changetype<Token | null>(store.get("Token", id));
   }
 
   get id(): string {
     let value = this.get("id");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
   }
 
   set id(value: string) {
@@ -44,7 +52,11 @@ export class Token extends Entity {
 
   get name(): string {
     let value = this.get("name");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
   }
 
   set name(value: string) {
@@ -53,7 +65,11 @@ export class Token extends Entity {
 
   get symbol(): string {
     let value = this.get("symbol");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
   }
 
   set symbol(value: string) {
@@ -62,7 +78,11 @@ export class Token extends Entity {
 
   get decimals(): BigDecimal {
     let value = this.get("decimals");
-    return value!.toBigDecimal();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigDecimal();
+    }
   }
 
   set decimals(value: BigDecimal) {
@@ -88,13 +108,21 @@ export class Account extends Entity {
     }
   }
 
+  static loadInBlock(id: string): Account | null {
+    return changetype<Account | null>(store.get_in_block("Account", id));
+  }
+
   static load(id: string): Account | null {
     return changetype<Account | null>(store.get("Account", id));
   }
 
   get id(): string {
     let value = this.get("id");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
   }
 
   set id(value: string) {
@@ -103,11 +131,11 @@ export class Account extends Entity {
 
   get balances(): Array<string> {
     let value = this.get("balances");
-    return value!.toStringArray();
-  }
-
-  set balances(value: Array<string>) {
-    this.set("balances", Value.fromStringArray(value));
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toStringArray();
+    }
   }
 }
 
@@ -129,13 +157,23 @@ export class TokenBalance extends Entity {
     }
   }
 
+  static loadInBlock(id: string): TokenBalance | null {
+    return changetype<TokenBalance | null>(
+      store.get_in_block("TokenBalance", id)
+    );
+  }
+
   static load(id: string): TokenBalance | null {
     return changetype<TokenBalance | null>(store.get("TokenBalance", id));
   }
 
   get id(): string {
     let value = this.get("id");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
   }
 
   set id(value: string) {
@@ -144,7 +182,11 @@ export class TokenBalance extends Entity {
 
   get token(): string {
     let value = this.get("token");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
   }
 
   set token(value: string) {
@@ -153,7 +195,11 @@ export class TokenBalance extends Entity {
 
   get account(): string {
     let value = this.get("account");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
   }
 
   set account(value: string) {
@@ -162,7 +208,11 @@ export class TokenBalance extends Entity {
 
   get amount(): BigDecimal {
     let value = this.get("amount");
-    return value!.toBigDecimal();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigDecimal();
+    }
   }
 
   set amount(value: BigDecimal) {
@@ -188,6 +238,12 @@ export class PintswapTransfer extends Entity {
     }
   }
 
+  static loadInBlock(id: string): PintswapTransfer | null {
+    return changetype<PintswapTransfer | null>(
+      store.get_in_block("PintswapTransfer", id)
+    );
+  }
+
   static load(id: string): PintswapTransfer | null {
     return changetype<PintswapTransfer | null>(
       store.get("PintswapTransfer", id)
@@ -196,7 +252,11 @@ export class PintswapTransfer extends Entity {
 
   get id(): string {
     let value = this.get("id");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
   }
 
   set id(value: string) {
@@ -205,7 +265,11 @@ export class PintswapTransfer extends Entity {
 
   get token(): string {
     let value = this.get("token");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
   }
 
   set token(value: string) {
@@ -214,7 +278,11 @@ export class PintswapTransfer extends Entity {
 
   get fromAccount(): string {
     let value = this.get("fromAccount");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
   }
 
   set fromAccount(value: string) {
@@ -223,19 +291,27 @@ export class PintswapTransfer extends Entity {
 
   get toAccount(): string {
     let value = this.get("toAccount");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
   }
 
   set toAccount(value: string) {
     this.set("toAccount", Value.fromString(value));
   }
 
-  get pintswapTrade(): boolean {
-    let value = this.get("pintswapTrade");
-    return value!.toBoolean();
+  get bytes(): Bytes {
+    let value = this.get("bytes");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
   }
 
-  set pintswapTrade(value: boolean) {
-    this.set("pintswapTrade", Value.fromBoolean(value));
+  set bytes(value: Bytes) {
+    this.set("bytes", Value.fromBytes(value));
   }
 }

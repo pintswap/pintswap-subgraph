@@ -36,5 +36,5 @@ type PintswapTransfer @entity {
   # to account
   toAccount: Account!
   # pintswap trade
-  pintswapTrade: Boolean!
+  bytes: Bytes!
 }
