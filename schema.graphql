@@ -26,3 +26,15 @@ type TokenBalance @entity {
   #amount
   amount: BigDecimal!
 }
+
+type PintswapTransfer @entity {
+  id: ID!
+  # token
+  token: Token!
+  # from account
+  fromAccount: Account!
+  # to account
+  toAccount: Account!
+  # pintswap trade
+  pintswapTrade: Boolean!
+}

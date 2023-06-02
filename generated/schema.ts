@@ -169,3 +169,73 @@ export class TokenBalance extends Entity {
     this.set("amount", Value.fromBigDecimal(value));
   }
 }
+
+export class PintswapTransfer extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save PintswapTransfer entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type PintswapTransfer must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("PintswapTransfer", id.toString(), this);
+    }
+  }
+
+  static load(id: string): PintswapTransfer | null {
+    return changetype<PintswapTransfer | null>(
+      store.get("PintswapTransfer", id)
+    );
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get token(): string {
+    let value = this.get("token");
+    return value!.toString();
+  }
+
+  set token(value: string) {
+    this.set("token", Value.fromString(value));
+  }
+
+  get fromAccount(): string {
+    let value = this.get("fromAccount");
+    return value!.toString();
+  }
+
+  set fromAccount(value: string) {
+    this.set("fromAccount", Value.fromString(value));
+  }
+
+  get toAccount(): string {
+    let value = this.get("toAccount");
+    return value!.toString();
+  }
+
+  set toAccount(value: string) {
+    this.set("toAccount", Value.fromString(value));
+  }
+
+  get pintswapTrade(): boolean {
+    let value = this.get("pintswapTrade");
+    return value!.toBoolean();
+  }
+
+  set pintswapTrade(value: boolean) {
+    this.set("pintswapTrade", Value.fromBoolean(value));
+  }
+}
