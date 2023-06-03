@@ -1,0 +1,13 @@
+const o = {
+  "1": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+  "3": "0xc778417e063141139fce010982780140aa0cd5ab",
+  "4": "0xc778417e063141139fce010982780140aa0cd5ab",
+  "42": "0xd0a1e359811322d97991e03f863a0c30c2cf029c",
+  "42161": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+  "137": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+  "10": "0x4200000000000000000000000000000000000006",
+  "43112": "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB",
+  "324": "0x8Ebe4A94740515945ad826238Fc4D56c6B8b0e60",
+}
+
+Object.entries(o).forEach(([ key, value ]) => console.log('WETH_ADDERSSES.set(' + key + ', "' + value + '");'));
