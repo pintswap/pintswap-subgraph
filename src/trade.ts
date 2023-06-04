@@ -35,7 +35,7 @@ class Offer {
     this.amount = amount;
   }
 }
-class ParseTradeResult {
+class TradeResult {
   public success: boolean;
   public gets: Offer;
   public gives: Offer;
@@ -60,14 +60,14 @@ class TailResult {
   }
 }
 
-const NULL_TRADE_RESULT: ParseTradeResult = new ParseTradeResult(false, new Offer("", ""), new Offer("", ""), "", "", 0);
+const NULL_TRADE_RESULT: TradeResult = new TradeResult(false, new Offer("", ""), new Offer("", ""), "", "", 0);
 
 const NULL_TRANSFER_RESULT: TransferResult = new TransferResult(false, [], new TransferResultData("", "", "", ""));
 
 const NULL_TAIL_RESULT: TailResult = new TailResult(false, []);
 
 export const stripHexPrefix = (s: string): string =>
-  s.substr(0, 2) === "0x" ? s.substr(2) : s;
+  s.substr(0, 2) == "0x" ? s.substr(2) : s;
 
 const zeroPadBytes = (v: string, n: i32): string => {
   const fixed = addHexPrefix(stripHexPrefix(v));
@@ -85,12 +85,12 @@ export const toWETH = (chainId: i32): string => {
 const checkOp = (ary: Instruction[], op: string): string => {
   const item = ary.splice(0, 1)[0] || [];
   const opCode = item[0];
-  const operand = item[2];
+  const operand = item[3];
   if (!opCode) return "false";
   if (
-    op === "ANY" ||
-    (op === "PUSH" && opCode.substr(0, 4) === "PUSH") ||
-    opCode === op
+    op == "ANY" ||
+    (op == "PUSH" && opCode.substr(0, 4) == "PUSH") ||
+    opCode == op
   )
     return operand || "";
   else return "false";
@@ -110,7 +110,7 @@ export const parsePermit2 = (
 ): TransferResult => {
   if (!first) first = false;
   const ops = disassembly.slice();
-  const parsed: string[] = mapCheckOps(disassembly, [
+  const instructions = [
     first ? "PC" : "PUSH1",
     first ? "RETURNDATASIZE" : "PUSH1",
     "PUSH2",
@@ -158,17 +158,20 @@ export const parsePermit2 = (
     "PUSH2",
     "MSTORE",
     "CALL",
-  ]);
+  ];
+  if (!first) instructions.push("AND");
+  if (instructions.length > ops.length) return NULL_TRANSFER_RESULT;
+  const parsed: string[] = mapCheckOps(ops, instructions);
   if (
-    findString(parsed, (v: string, i: i32, ary: string[]) => v === "false") ===
+    findString(parsed, (v: string, i: i32, ary: string[]) => v == "false") ==
       "false" ||
-    parsed[2] !== "0x0184" ||
-    parsed[5] !== "0x22d473030f116ddee9f6b43ac78ba3" ||
-    parsed[7] !==
+    parsed[2] != "0x0184" ||
+    parsed[5] != "0x22d473030f116ddee9f6b43ac78ba3" ||
+    parsed[7] !=
       "0x30f28b7a00000000000000000000000000000000000000000000000000000000"
   )
     return NULL_TRANSFER_RESULT;
-  const result: TransferResult = new TransferResult(true, disassembly.slice(parsed.length), new TransferResultData(getAddress(parsed[10]), parsed[22] === "0x" ? "CALLER" : getAddress(parsed[22]), getAddress(parsed[28]), parsed[13]));
+  const result: TransferResult = new TransferResult(true, disassembly.slice(parsed.length), new TransferResultData(getAddress(parsed[10]), parsed[22] == "0x" ? "CALLER" : getAddress(parsed[22]), getAddress(parsed[28]), parsed[13]));
   return result;
 };
 
@@ -185,15 +188,15 @@ export function parseTransfer(
     : NULL_TRANSFER_RESULT;
   if (!transfer.success && !transferFrom.success) return NULL_TRANSFER_RESULT;
   const withdraw: TailResult =
-    transfer.success && transfer.data.token === getAddress(toWETH(chainId))
-      ? parseWithdraw(transfer.tail, false)
+    transfer.success && transfer.data.token == getAddress(toWETH(chainId))
+      ? parseWithdraw(transfer.tail, chainId, false)
       : NULL_TAIL_RESULT;
   const sendEther: TailResult = withdraw.success
     ? parseSendEther(withdraw.tail)
     : NULL_TAIL_RESULT;
   if (
     transfer.success &&
-    transfer.data.token === getAddress(toWETH(chainId)) &&
+    transfer.data.token == getAddress(toWETH(chainId)) &&
     !(sendEther.success && withdraw.success)
   )
     return NULL_TRANSFER_RESULT;
@@ -214,14 +217,14 @@ function findString(
   fn: (v: string, i: i32, ary: string[]) => boolean
 ): string {
   const i = ary.findIndex(fn);
-  if (~i) return ary[i];
-  else return "";
+  var result = (~i === 0) ? "" : ary[i];
+  return result;
 }
 
 export function parseTrade(
   bytecode: string,
   chainId: i32
-): ParseTradeResult {
+): TradeResult {
   if (!chainId) chainId = 1;
   const disassembly: Instruction[] = evmdis.disassemble(bytecode);
   const firstPermit: TailResult = parsePermit(disassembly, true);
@@ -237,13 +240,13 @@ export function parseTrade(
     chainId,
     !firstPermit.success
   );
-  if (!firstTransfer) return NULL_TRADE_RESULT;
+  if (!firstTransfer.success) return NULL_TRADE_RESULT;
   const secondTransfer: TransferResult = parseTransfer(
     firstTransfer.tail,
     chainId,
     false
   );
-  if (!secondTransfer) return NULL_TRADE_RESULT;
+  if (!secondTransfer.success) return NULL_TRADE_RESULT;
   const ops = secondTransfer.tail.slice();
   const parsed: string[] = mapCheckOps(ops, [
     "ISZERO",
@@ -257,7 +260,7 @@ export function parseTrade(
     "REVERT",
   ]);
   if (
-    findString(parsed, (v: string, i: i32, ary: string[]) => v === "false") ===
+    findString(parsed, (v: string, i: i32, ary: string[]) => v == "false") ==
       "" ||
     findString(
       parsed.slice(6, 7),
@@ -271,7 +274,7 @@ export function parseTrade(
   const maker = secondTransfer.data.from;
   const gets: Offer = new Offer(firstTransfer.data.token, firstTransfer.data.amount);
   const gives: Offer = new Offer(secondTransfer.data.token, secondTransfer.data.amount);
-  const result: ParseTradeResult = new ParseTradeResult(true, gets, gives, taker, maker, chainId);
+  const result: TradeResult = new TradeResult(true, gets, gives, taker, maker, chainId);
   return result;
 }
 
@@ -299,14 +302,15 @@ export function parseWithdraw(
     "MSTORE",
     "CALL",
   ];
+  if (instructions.length > ops.length) return NULL_TAIL_RESULT;
   if (!first) instructions.push("AND");
   const parsed: string[] = mapCheckOps(ops, instructions);
   if (
-    parsed[2] !== "0x24" ||
-    getAddress(parsed[5]) !== getAddress(toWETH(chainId)) ||
-    parsed[7] !==
+    parsed[2] != "0x24" ||
+    getAddress(parsed[5]) != getAddress(toWETH(chainId)) ||
+    parsed[7] !=
       "0x2e1a7d4d00000000000000000000000000000000000000000000000000000000" ||
-    parsed[11] !== "0x04"
+    parsed[11] != "0x04"
   )
     return NULL_TAIL_RESULT;
   const result: TailResult = new TailResult(true, disassembly.slice(parsed.length));
@@ -354,12 +358,13 @@ export function parsePermit(
     "CALL",
   ];
   if (!first) instructions.push("AND");
+  if (instructions.length > ops.length) return NULL_TAIL_RESULT;
   const parsed: string[] = mapCheckOps(ops, instructions);
   if (
-    parsed[2] !== "0xe4" ||
-    parsed[7] !==
+    parsed[2] != "0xe4" ||
+    parsed[7] !=
       "0xd505accf00000000000000000000000000000000000000000000000000000000" ||
-    parsed[11] !== "0x04"
+    parsed[11] != "0x04"
   )
     return NULL_TAIL_RESULT;
   const result: TailResult = new TailResult(true, disassembly.slice(parsed.length));
@@ -397,19 +402,19 @@ export function parseTransferFrom(
   if (!first) instructions.push("AND");
   const parsed: string[] = mapCheckOps(ops, instructions);
   if (
-    parsed[2] !== "0x64" ||
-    parsed[7] !==
+    parsed[2] != "0x64" ||
+    parsed[7] !=
       "0x23b872dd00000000000000000000000000000000000000000000000000000000" ||
-    parsed[11] !== "0x04"
+    parsed[11] != "0x04"
   )
     return NULL_TRANSFER_RESULT;
-  const result: TransferResult = new TransferResult(false, disassembly.slice(parsed.length), new TransferResultData(getAddress(parsed[5]), getAddress(parsed[10]), getAddress(parsed[13]), parsed[16]));
+  const result: TransferResult = new TransferResult(true, disassembly.slice(parsed.length), new TransferResultData(getAddress(parsed[5]), getAddress(parsed[10]), getAddress(parsed[13]), parsed[16]));
   return result;
 }
 
 export function parseSendEther(disassembly: Instruction[]): TailResult {
   const ops = disassembly.slice();
-  const parsed = mapCheckOps(ops, [
+  const instructions = [
     "PUSH1",
     "PUSH1",
     "PUSH1",
@@ -419,10 +424,12 @@ export function parseSendEther(disassembly: Instruction[]): TailResult {
     "GAS",
     "CALL",
     "AND",
-  ]);
+  ];
+  if (instructions.length > ops.length) return NULL_TAIL_RESULT;
+  const parsed = mapCheckOps(ops, instructions);
   if (
-    findString(parsed, (v: string, i: i32, ary: string[]) => v === "false") === "false" ||
-    findString(parsed.slice(0, 4), (v: string, i: i32, ary: string[]) => v !== "0x00") === ''
+    findString(parsed, (v: string, i: i32, ary: string[]) => v == "false") == "false" ||
+    findString(parsed.slice(0, 4), (v: string, i: i32, ary: string[]) => v != "0x00") == ''
   )
     return NULL_TAIL_RESULT;
   const result: TailResult = new TailResult(true, disassembly.slice(parsed.length));

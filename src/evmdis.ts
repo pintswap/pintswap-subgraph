@@ -147,22 +147,24 @@ instructions.set("a3", new InstructionDescriptor("LOG3", [375, 5, 0, 0]))
 instructions.set("a4", new InstructionDescriptor("LOG4", [375, 6, 0, 0]))
 
 export type Instruction = string[];
-export const addHexPrefix = (s: string): string => (s.substr(0, 2) === "0x" ? s : "0x" + s);
+export const addHexPrefix = (s: string): string => (s.substr(0, 2) == "0x" ? s : "0x" + s);
 
 export const leftZeroPad = (s: string, n: i32): string => {
   return "0".repeat(n - s.length) + s;
 };
 
+export const stripHexPrefix = (s: string): string => s.substr(0, 2) == "0x" ? s.substring(2) : s;
+
 export function toByteArray(s: string): string[] {
   const result: string[] = [];
-  for (var i = 0; i < s.length; i += 2) {
-    result.push(s.substr(i*2, 2));
+  const stripped = stripHexPrefix(s);
+  for (var i = 0; i < stripped.length; i += 2) {
+    result.push(stripped.substr(i, 2));
   }
   return result;
 }
     
 export function disassemble(bytes: string): Instruction[] {
-  bytes = addHexPrefix(bytes).substr(2);
   const bytesArray = toByteArray(bytes);
   var i: i32 = 0;
   const seqs: Instruction[] = [];
