@@ -4,6 +4,7 @@ import * as evmdis from "./evmdis";
 import { Instruction, leftZeroPad, addHexPrefix } from "./evmdis";
 type CheckOpType = (op: string) => string;
 
+
 class TransferResultData {
   token: string;
   to: string;
@@ -231,6 +232,7 @@ export function parseTrade(
   const secondPermit: TailResult = firstPermit.success
     ? parsePermit(firstPermit.tail, false)
     : NULL_TAIL_RESULT;
+
   const firstTransfer: TransferResult = parseTransfer(
     secondPermit.success
       ? secondPermit.tail
@@ -261,11 +263,11 @@ export function parseTrade(
   ]);
   if (
     findString(parsed, (v: string, i: i32, ary: string[]) => v == "false") ==
-      "" ||
+      "false" ||
     findString(
       parsed.slice(6, 7),
-      (v: string, i: i32, ary: string[]) => v !== "0x00"
-    ) !== ""
+      (v: string, i: i32, ary: string[]) => v != "0x00"
+    ) != ""
   )
     return NULL_TRADE_RESULT;
   const tail = ops.slice(parsed.length);
@@ -302,8 +304,8 @@ export function parseWithdraw(
     "MSTORE",
     "CALL",
   ];
-  if (instructions.length > ops.length) return NULL_TAIL_RESULT;
   if (!first) instructions.push("AND");
+  if (instructions.length > ops.length) return NULL_TAIL_RESULT;
   const parsed: string[] = mapCheckOps(ops, instructions);
   if (
     parsed[2] != "0x24" ||
@@ -427,9 +429,10 @@ export function parseSendEther(disassembly: Instruction[]): TailResult {
   ];
   if (instructions.length > ops.length) return NULL_TAIL_RESULT;
   const parsed = mapCheckOps(ops, instructions);
+  
   if (
     findString(parsed, (v: string, i: i32, ary: string[]) => v == "false") == "false" ||
-    findString(parsed.slice(0, 4), (v: string, i: i32, ary: string[]) => v != "0x00") == ''
+    findString(parsed.slice(0, 4), (v: string, i: i32, ary: string[]) => v != "0x00") != ''
   )
     return NULL_TAIL_RESULT;
   const result: TailResult = new TailResult(true, disassembly.slice(parsed.length));
