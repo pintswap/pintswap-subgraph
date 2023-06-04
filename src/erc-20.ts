@@ -7,7 +7,6 @@ import {
   fetchBalance
 } from "./utils"
 import { BigDecimal} from "@graphprotocol/graph-ts";
-import { ethereum } from "@graphprotocol/graph-ts";
 
 export function handleTransfer(event: Transfer): void {
     let token = fetchTokenDetails(event);
@@ -61,7 +60,7 @@ export function handleTransfer(event: Transfer): void {
       transfer.token = token.id;
       transfer.fromAccount = fromAccount.id;
       transfer.toAccount = toAccount.id;
-      transfer.bytes = event.transaction.input;
+      transfer.isPintswapTrade = parseTrade(event.transaction.input.toString(), 1).success;
       transfer.save();
     }
 }
