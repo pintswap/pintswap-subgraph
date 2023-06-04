@@ -220,7 +220,7 @@ export class TokenBalance extends Entity {
   }
 }
 
-export class Offer extends Entity {
+export class PintswapTrade extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
@@ -228,22 +228,24 @@ export class Offer extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save Offer entity without an ID");
+    assert(id != null, "Cannot save PintswapTrade entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.STRING,
-        `Entities of type Offer must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type PintswapTrade must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("Offer", id.toString(), this);
+      store.set("PintswapTrade", id.toString(), this);
     }
   }
 
-  static loadInBlock(id: string): Offer | null {
-    return changetype<Offer | null>(store.get_in_block("Offer", id));
+  static loadInBlock(id: string): PintswapTrade | null {
+    return changetype<PintswapTrade | null>(
+      store.get_in_block("PintswapTrade", id)
+    );
   }
 
-  static load(id: string): Offer | null {
-    return changetype<Offer | null>(store.get("Offer", id));
+  static load(id: string): PintswapTrade | null {
+    return changetype<PintswapTrade | null>(store.get("PintswapTrade", id));
   }
 
   get id(): string {
@@ -259,211 +261,21 @@ export class Offer extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get token(): string | null {
-    let value = this.get("token");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set token(value: string | null) {
-    if (!value) {
-      this.unset("token");
-    } else {
-      this.set("token", Value.fromString(<string>value));
-    }
-  }
-
-  get amount(): string | null {
-    let value = this.get("amount");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set amount(value: string | null) {
-    if (!value) {
-      this.unset("amount");
-    } else {
-      this.set("amount", Value.fromString(<string>value));
-    }
-  }
-}
-
-export class ParseTradeResult extends Entity {
-  constructor(id: string) {
-    super();
-    this.set("id", Value.fromString(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(id != null, "Cannot save ParseTradeResult entity without an ID");
-    if (id) {
-      assert(
-        id.kind == ValueKind.STRING,
-        `Entities of type ParseTradeResult must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
-      );
-      store.set("ParseTradeResult", id.toString(), this);
-    }
-  }
-
-  static loadInBlock(id: string): ParseTradeResult | null {
-    return changetype<ParseTradeResult | null>(
-      store.get_in_block("ParseTradeResult", id)
-    );
-  }
-
-  static load(id: string): ParseTradeResult | null {
-    return changetype<ParseTradeResult | null>(
-      store.get("ParseTradeResult", id)
-    );
-  }
-
-  get id(): string {
-    let value = this.get("id");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toString();
-    }
-  }
-
-  set id(value: string) {
-    this.set("id", Value.fromString(value));
-  }
-
-  get success(): boolean {
-    let value = this.get("success");
-    if (!value || value.kind == ValueKind.NULL) {
-      return false;
-    } else {
-      return value.toBoolean();
-    }
-  }
-
-  set success(value: boolean) {
-    this.set("success", Value.fromBoolean(value));
-  }
-
-  get gets(): string | null {
-    let value = this.get("gets");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set gets(value: string | null) {
-    if (!value) {
-      this.unset("gets");
-    } else {
-      this.set("gets", Value.fromString(<string>value));
-    }
-  }
-
-  get gives(): string | null {
-    let value = this.get("gives");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set gives(value: string | null) {
-    if (!value) {
-      this.unset("gives");
-    } else {
-      this.set("gives", Value.fromString(<string>value));
-    }
-  }
-
-  get maker(): string | null {
-    let value = this.get("maker");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set maker(value: string | null) {
-    if (!value) {
-      this.unset("maker");
-    } else {
-      this.set("maker", Value.fromString(<string>value));
-    }
-  }
-
-  get taker(): string | null {
-    let value = this.get("taker");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set taker(value: string | null) {
-    if (!value) {
-      this.unset("taker");
-    } else {
-      this.set("taker", Value.fromString(<string>value));
-    }
-  }
-
-  get chainId(): i32 {
+  get chainId(): string {
     let value = this.get("chainId");
     if (!value || value.kind == ValueKind.NULL) {
-      return 0;
+      throw new Error("Cannot return null for a required field.");
     } else {
-      return value.toI32();
+      return value.toString();
     }
   }
 
-  set chainId(value: i32) {
-    this.set("chainId", Value.fromI32(value));
-  }
-}
-
-export class PintswapTransfer extends Entity {
-  constructor(id: string) {
-    super();
-    this.set("id", Value.fromString(id));
+  set chainId(value: string) {
+    this.set("chainId", Value.fromString(value));
   }
 
-  save(): void {
-    let id = this.get("id");
-    assert(id != null, "Cannot save PintswapTransfer entity without an ID");
-    if (id) {
-      assert(
-        id.kind == ValueKind.STRING,
-        `Entities of type PintswapTransfer must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
-      );
-      store.set("PintswapTransfer", id.toString(), this);
-    }
-  }
-
-  static loadInBlock(id: string): PintswapTransfer | null {
-    return changetype<PintswapTransfer | null>(
-      store.get_in_block("PintswapTransfer", id)
-    );
-  }
-
-  static load(id: string): PintswapTransfer | null {
-    return changetype<PintswapTransfer | null>(
-      store.get("PintswapTransfer", id)
-    );
-  }
-
-  get id(): string {
-    let value = this.get("id");
+  get maker(): string {
+    let value = this.get("maker");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -471,12 +283,12 @@ export class PintswapTransfer extends Entity {
     }
   }
 
-  set id(value: string) {
-    this.set("id", Value.fromString(value));
+  set maker(value: string) {
+    this.set("maker", Value.fromString(value));
   }
 
-  get token(): string {
-    let value = this.get("token");
+  get taker(): string {
+    let value = this.get("taker");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -484,12 +296,12 @@ export class PintswapTransfer extends Entity {
     }
   }
 
-  set token(value: string) {
-    this.set("token", Value.fromString(value));
+  set taker(value: string) {
+    this.set("taker", Value.fromString(value));
   }
 
-  get fromAccount(): string {
-    let value = this.get("fromAccount");
+  get givesToken(): string {
+    let value = this.get("givesToken");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -497,12 +309,12 @@ export class PintswapTransfer extends Entity {
     }
   }
 
-  set fromAccount(value: string) {
-    this.set("fromAccount", Value.fromString(value));
+  set givesToken(value: string) {
+    this.set("givesToken", Value.fromString(value));
   }
 
-  get toAccount(): string {
-    let value = this.get("toAccount");
+  get givesAmount(): string {
+    let value = this.get("givesAmount");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -510,20 +322,33 @@ export class PintswapTransfer extends Entity {
     }
   }
 
-  set toAccount(value: string) {
-    this.set("toAccount", Value.fromString(value));
+  set givesAmount(value: string) {
+    this.set("givesAmount", Value.fromString(value));
   }
 
-  get isPintswapTrade(): boolean {
-    let value = this.get("isPintswapTrade");
+  get getsToken(): string {
+    let value = this.get("getsToken");
     if (!value || value.kind == ValueKind.NULL) {
-      return false;
+      throw new Error("Cannot return null for a required field.");
     } else {
-      return value.toBoolean();
+      return value.toString();
     }
   }
 
-  set isPintswapTrade(value: boolean) {
-    this.set("isPintswapTrade", Value.fromBoolean(value));
+  set getsToken(value: string) {
+    this.set("getsToken", Value.fromString(value));
+  }
+
+  get getsAmount(): string {
+    let value = this.get("getsAmount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set getsAmount(value: string) {
+    this.set("getsAmount", Value.fromString(value));
   }
 }

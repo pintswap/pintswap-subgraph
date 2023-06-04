@@ -1,5 +1,5 @@
-import {ERC20} from "../generated/ERC20/ERC20"
-import {Account,Token} from "../generated/schema"
+import { ERC20 } from "../generated/ERC20/ERC20"
+import { Account, Token } from "../generated/schema"
 import { BigDecimal, ethereum, Address } from "@graphprotocol/graph-ts";
 
 // fetch token details

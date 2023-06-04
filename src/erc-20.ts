@@ -1,10 +1,10 @@
 import {Transfer} from "../generated/ERC20/ERC20"
 import {parseTrade} from "./trade";
-import {TokenBalance, PintswapTransfer} from "../generated/schema"
+import {TokenBalance, PintswapTrade} from "../generated/schema"
 import {
   fetchTokenDetails,
   fetchAccount,
-  fetchBalance
+  fetchBalance,
 } from "./utils"
 import { BigDecimal} from "@graphprotocol/graph-ts";
 
@@ -53,14 +53,23 @@ export function handleTransfer(event: Transfer): void {
       toTokenBalance.save();
     }
 
-    // determine if transaction is a pintswap transaction
-    let transfer = PintswapTransfer.load(`${event.transaction.hash}`);
-    if (!transfer) {
-      transfer = new PintswapTransfer(`${event.transaction.hash}`)
-      transfer.token = token.id;
-      transfer.fromAccount = fromAccount.id;
-      transfer.toAccount = toAccount.id;
-      transfer.isPintswapTrade = parseTrade(event.transaction.input.toString(), 1).success;
-      transfer.save();
+    // handle pintswap transactions
+    const parsedTrade = parseTrade(event.transaction.input.toString(), 1);
+    if (parsedTrade.success) {
+      let psTransfer = PintswapTrade.load(`${event.transaction.hash}`);
+      if (!psTransfer) {
+        psTransfer = new PintswapTrade(`${event.transaction.hash}`);
+        // Set chain id
+        psTransfer.chainId = (parsedTrade.chainId || 1).toString();
+        // Set Taker and Maker
+        psTransfer.maker = parsedTrade.maker;
+        psTransfer.taker = parsedTrade.taker;
+        // Set Give and Get Offer
+        psTransfer.givesToken = parsedTrade.gives.token;
+        psTransfer.givesAmount = parsedTrade.gives.amount;
+        psTransfer.getsToken = parsedTrade.gets.token;
+        psTransfer.getsAmount = parsedTrade.gets.amount;
+        psTransfer.save();
+      }
     }
 }
