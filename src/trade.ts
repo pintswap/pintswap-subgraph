@@ -188,7 +188,7 @@ export function parseTransfer(
     : NULL_TRANSFER_RESULT;
   if (!transfer.success && !transferFrom.success) return NULL_TRANSFER_RESULT;
   const withdraw: TailResult =
-    transfer.success && transfer.data.token == getAddress(toWETH(chainId))
+    transfer.success && transfer.data.token === getAddress(toWETH(chainId))
       ? parseWithdraw(transfer.tail, chainId, false)
       : NULL_TAIL_RESULT;
   const sendEther: TailResult = withdraw.success

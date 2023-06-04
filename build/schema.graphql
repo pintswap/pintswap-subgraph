@@ -27,6 +27,22 @@ type TokenBalance @entity {
   amount: BigDecimal!
 }
 
+type Offer @entity {
+  id: ID!
+  token: String
+  amount: String
+}
+
+type ParseTradeResult @entity {
+  id: ID!
+  success: Boolean
+  gets: Offer
+  gives: Offer
+  maker: String
+  taker: String
+  chainId: Int
+}
+
 type PintswapTransfer @entity {
   id: ID!
   # token
@@ -36,5 +52,5 @@ type PintswapTransfer @entity {
   # to account
   toAccount: Account!
   # pintswap trade
-  bytes: Bytes!
+  isPintswapTrade: Boolean
 }
