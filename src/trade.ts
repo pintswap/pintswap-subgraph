@@ -2,6 +2,8 @@ import { WETH_ADDRESSES } from "./WETH";
 import { PERMIT2_ADDRESS } from "./permit2";
 import * as evmdis from "./evmdis";
 import { Instruction, leftZeroPad, addHexPrefix } from "./evmdis";
+import { assert } from "matchstick-as/assembly/assert"
+import { ethereum } from "@graphprotocol/graph-ts"
 type CheckOpType = (op: string) => string;
 
 
@@ -183,15 +185,15 @@ export function parseTransfer(
 ): TransferResult {
   if (!first) first = false;
   if (!chainId) chainId = 1;
-  const transferFrom: TransferResult = parseTransferFrom(disassembly, first);
+  const transferFrom: TransferResult = parseTransferFrom(disassembly.slice(), first);
   const transfer: TransferResult = !transferFrom.success
-    ? parsePermit2(disassembly, first)
+    ? parsePermit2(disassembly.slice(), first)
     : NULL_TRANSFER_RESULT;
   if (!transfer.success && !transferFrom.success) return NULL_TRANSFER_RESULT;
-  const withdraw: TailResult =
-    transfer.success && transfer.data.token === getAddress(toWETH(chainId))
-      ? parseWithdraw(transfer.tail, chainId, false)
-      : NULL_TAIL_RESULT;
+  var withdraw: TailResult = NULL_TAIL_RESULT;
+  if (transfer.success && transfer.data.token == getAddress(toWETH(chainId))) {
+    withdraw = parseWithdraw(transfer.tail.slice(), chainId, false);
+  }
   const sendEther: TailResult = withdraw.success
     ? parseSendEther(withdraw.tail)
     : NULL_TAIL_RESULT;
@@ -285,8 +287,6 @@ export function parseWithdraw(
   chainId: i32,
   first: boolean
 ): TailResult {
-  if (!chainId) chainId = 1;
-  if (!first) first = false;
   const ops = disassembly.slice();
   const instructions = [
     first ? "PC" : "PUSH1",
@@ -307,6 +307,7 @@ export function parseWithdraw(
   if (!first) instructions.push("AND");
   if (instructions.length > ops.length) return NULL_TAIL_RESULT;
   const parsed: string[] = mapCheckOps(ops, instructions);
+  //assert.arrayEquals(ethereum.Value.fromStringArray(parsed).toArray(), ethereum.Value.fromStringArray([]).toArray());
   if (
     parsed[2] != "0x24" ||
     getAddress(parsed[5]) != getAddress(toWETH(chainId)) ||
@@ -402,6 +403,9 @@ export function parseTransferFrom(
     "CALL",
   ];
   if (!first) instructions.push("AND");
+  if (ops.length < instructions.length) {
+    return NULL_TRANSFER_RESULT;
+  }
   const parsed: string[] = mapCheckOps(ops, instructions);
   if (
     parsed[2] != "0x64" ||

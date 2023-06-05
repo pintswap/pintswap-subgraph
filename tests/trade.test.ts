@@ -24,4 +24,8 @@ describe("trade.ts", () => {
     const wethResult = parseTrade(wethData, 1);
     assert.booleanEquals(wethResult.success, true);
   })
+  test("parseTrade (invalid)", () => {
+    const result = parseTrade("0x602060205260006040f3", 1);
+    assert.booleanEquals(result.success, false);
+  })
 })
