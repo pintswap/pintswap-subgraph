@@ -54,22 +54,24 @@ export function handleTransfer(event: Transfer): void {
     }
 
     // handle pintswap transactions
-    const parsedTrade = parseTrade(event.transaction.input.toString(), 1);
-    if (parsedTrade.success) {
-      let psTransfer = PintswapTrade.load(`${event.transaction.hash}`);
-      if (!psTransfer) {
-        psTransfer = new PintswapTrade(`${event.transaction.hash}`);
-        // Set chain id
-        psTransfer.chainId = (parsedTrade.chainId || 1).toString();
-        // Set Taker and Maker
-        psTransfer.maker = parsedTrade.maker;
-        psTransfer.taker = parsedTrade.taker;
-        // Set Give and Get Offer
-        psTransfer.givesToken = parsedTrade.gives.token;
-        psTransfer.givesAmount = parsedTrade.gives.amount;
-        psTransfer.getsToken = parsedTrade.gets.token;
-        psTransfer.getsAmount = parsedTrade.gets.amount;
-        psTransfer.save();
+    if(event.transaction.to === null) {
+      const parsedTrade = parseTrade(event.transaction.input.toString(), 1);
+      if (parsedTrade.success) {
+        let psTransfer = PintswapTrade.load(`${event.transaction.hash}`);
+        if (!psTransfer) {
+          psTransfer = new PintswapTrade(`${event.transaction.hash}`);
+          // Set chain id
+          psTransfer.chainId = (parsedTrade.chainId || 1).toString();
+          // Set Taker and Maker
+          psTransfer.maker = parsedTrade.maker;
+          psTransfer.taker = parsedTrade.taker;
+          // Set Give and Get Offer
+          psTransfer.givesToken = parsedTrade.gives.token;
+          psTransfer.givesAmount = parsedTrade.gives.amount;
+          psTransfer.getsToken = parsedTrade.gets.token;
+          psTransfer.getsAmount = parsedTrade.gets.amount;
+          psTransfer.save();
+        }
       }
     }
 }
