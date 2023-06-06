@@ -7,7 +7,7 @@ dataSources:
     network: mainnet
     source:
       abi: ERC20
-      startBlock: 16482000 
+      startBlock: 16993126 
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -16,6 +16,7 @@ dataSources:
         - Token
         - Account
         - TokenBalance
+        - PintswapTrade
       abis:
         - name: ERC20
           file: ./abis/ERC20.json

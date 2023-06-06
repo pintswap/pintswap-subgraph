@@ -55,7 +55,7 @@ export function handleTransfer(event: Transfer): void {
 
     // handle pintswap transactions
     if(event.transaction.to === null) {
-      const parsedTrade = parseTrade(event.transaction.input.toString(), 1);
+      const parsedTrade = parseTrade(event.transaction.input.toHexString(), 1);
       if (parsedTrade.success) {
         let psTransfer = PintswapTrade.load(`${event.transaction.hash}`);
         if (!psTransfer) {
