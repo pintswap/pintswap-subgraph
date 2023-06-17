@@ -7,7 +7,7 @@ dataSources:
     network: mainnet
     source:
       abi: ERC20
-      startBlock: 16993126 
+      startBlock: 17501484 
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
