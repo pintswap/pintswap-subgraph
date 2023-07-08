@@ -27,17 +27,22 @@ type TokenBalance @entity {
   amount: BigDecimal!
 }
 
+type OneSideOfTrade @entity {
+  id: ID!
+  token: String!
+  amount: String!
+}
+
 type PintswapTrade @entity {
   id: ID!
   chainId: String!
+  timestamp: BigInt!
   # Maker
   maker: String!
   # Taker
   taker: String!
   # Gives
-  givesToken: String!
-  givesAmount: String!
+  gives: OneSideOfTrade!
   # Gets
-  getsToken: String!
-  getsAmount: String!
+  gets: OneSideOfTrade!
 }

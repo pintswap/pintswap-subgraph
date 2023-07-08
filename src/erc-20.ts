@@ -1,6 +1,6 @@
 import {Transfer} from "../generated/ERC20/ERC20"
 import {parseTrade} from "./trade";
-import {TokenBalance, PintswapTrade} from "../generated/schema"
+import {TokenBalance, PintswapTrade, OneSideOfTrade} from "../generated/schema"
 import {
   fetchTokenDetails,
   fetchAccount,
@@ -57,19 +57,37 @@ export function handleTransfer(event: Transfer): void {
     if(event.transaction.to === null) {
       const parsedTrade = parseTrade(event.transaction.input.toHexString(), 1);
       if (parsedTrade.success) {
-        let psTransfer = PintswapTrade.load(`${event.transaction.hash}`);
+        const readableHash = event.transaction.hash.toHexString();
+        let psTransfer = PintswapTrade.load(`${readableHash}`);
+        let psGives = OneSideOfTrade.load(`${readableHash}-gives`)
+        let psGets = OneSideOfTrade.load(`${readableHash}-gets`)
         if (!psTransfer) {
-          psTransfer = new PintswapTrade(`${event.transaction.hash}`);
+          psTransfer = new PintswapTrade(`${readableHash}`);
+          psGives = new OneSideOfTrade(`${readableHash}-gives`);
+          psGets = new OneSideOfTrade(`${readableHash}-gets`);
           // Set chain id
           psTransfer.chainId = (parsedTrade.chainId || 1).toString();
+          // Set timestamp
+          psTransfer.timestamp = event.block.timestamp;
           // Set Taker and Maker
           psTransfer.maker = parsedTrade.maker;
           psTransfer.taker = parsedTrade.taker;
           // Set Give and Get Offer
-          psTransfer.givesToken = parsedTrade.gives.token;
-          psTransfer.givesAmount = parsedTrade.gives.amount;
-          psTransfer.getsToken = parsedTrade.gets.token;
-          psTransfer.getsAmount = parsedTrade.gets.amount;
+          // psTransfer.givesToken = parsedTrade.gives.token;
+          // psTransfer.givesAmount = parsedTrade.gives.amount;
+          // psTransfer.getsToken = parsedTrade.gets.token;
+          // psTransfer.getsAmount = parsedTrade.gets.amount;
+          // Set Give
+          psGives.token = parsedTrade.gives.token;
+          psGives.amount = parsedTrade.gives.amount;
+          psTransfer.gives = psGives.id;
+          // Set Get
+          psGets.token = parsedTrade.gets.token;
+          psGets.amount = parsedTrade.gets.amount;
+          psTransfer.gets = psGets.id;
+          // Save
+          psGives.save();
+          psGets.save();
           psTransfer.save();
         }
       }
