@@ -72,11 +72,6 @@ export function handleTransfer(event: Transfer): void {
           // Set Taker and Maker
           psTransfer.maker = parsedTrade.maker;
           psTransfer.taker = parsedTrade.taker;
-          // Set Give and Get Offer
-          // psTransfer.givesToken = parsedTrade.gives.token;
-          // psTransfer.givesAmount = parsedTrade.gives.amount;
-          // psTransfer.getsToken = parsedTrade.gets.token;
-          // psTransfer.getsAmount = parsedTrade.gets.amount;
           // Set Give
           psGives.token = parsedTrade.gives.token;
           psGives.amount = parsedTrade.gives.amount;
