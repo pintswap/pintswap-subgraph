@@ -406,4 +406,17 @@ export class PintswapTrade extends Entity {
   set gets(value: string) {
     this.set("gets", Value.fromString(value));
   }
+
+  get pair(): string {
+    let value = this.get("pair");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set pair(value: string) {
+    this.set("pair", Value.fromString(value));
+  }
 }

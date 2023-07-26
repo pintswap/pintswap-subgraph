@@ -59,12 +59,12 @@ export function handleTransfer(event: Transfer): void {
       if (parsedTrade.success) {
         const readableHash = event.transaction.hash.toHexString();
         let psTransfer = PintswapTrade.load(`${readableHash}`);
-        let psGives = OneSideOfTrade.load(`gives-${parsedTrade.gives.token}-${readableHash}`)
-        let psGets = OneSideOfTrade.load(`gets-${parsedTrade.gets.token}-${readableHash}`)
+        let psGives = OneSideOfTrade.load(`gives-${readableHash}`)
+        let psGets = OneSideOfTrade.load(`gets-${readableHash}`)
         if (!psTransfer) {
           psTransfer = new PintswapTrade(`${readableHash}`);
-          psGives = new OneSideOfTrade(`${readableHash}-gives`);
-          psGets = new OneSideOfTrade(`${readableHash}-gets`);
+          psGives = new OneSideOfTrade(`gives-${readableHash}`);
+          psGets = new OneSideOfTrade(`gets-${readableHash}`);
           // Set chain id
           psTransfer.chainId = (parsedTrade.chainId || 1).toString();
           // Set timestamp
@@ -80,6 +80,8 @@ export function handleTransfer(event: Transfer): void {
           psGets.token = parsedTrade.gets.token;
           psGets.amount = parsedTrade.gets.amount;
           psTransfer.gets = psGets.id;
+          // Set pair
+          psTransfer.pair = `${parsedTrade.gives.token}/${parsedTrade.gets.token}`
           // Save
           psGives.save();
           psGets.save();

@@ -45,4 +45,6 @@ type PintswapTrade @entity {
   gives: OneSideOfTrade!
   # Gets
   gets: OneSideOfTrade!
+  # Token Pair
+  pair: String!
 }
