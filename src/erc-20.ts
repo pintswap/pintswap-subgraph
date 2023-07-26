@@ -59,8 +59,8 @@ export function handleTransfer(event: Transfer): void {
       if (parsedTrade.success) {
         const readableHash = event.transaction.hash.toHexString();
         let psTransfer = PintswapTrade.load(`${readableHash}`);
-        let psGives = OneSideOfTrade.load(`${readableHash}-gives`)
-        let psGets = OneSideOfTrade.load(`${readableHash}-gets`)
+        let psGives = OneSideOfTrade.load(`gives-${parsedTrade.gives.token}-${readableHash}`)
+        let psGets = OneSideOfTrade.load(`gets-${parsedTrade.gets.token}-${readableHash}`)
         if (!psTransfer) {
           psTransfer = new PintswapTrade(`${readableHash}`);
           psGives = new OneSideOfTrade(`${readableHash}-gives`);
