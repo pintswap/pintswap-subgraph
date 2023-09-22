@@ -3,5 +3,25 @@
     "ERC20": {
       "address": "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0"
     }
+  },
+  "arbitrum-one": {
+    "ERC20": {
+      "address": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
+    }
+  },
+  "optimism": {
+    "ERC20": {
+      "address": "0x4200000000000000000000000000000000000006"
+    }
+  },
+  "celo": {
+    "ERC20": {
+      "address": "0x122013fd7dF1C6F636a5bb8f03108E876548b455"
+    }
+  },
+  "matic": {
+    "ERC20": {
+      "address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619"
+    }
   }
 }
