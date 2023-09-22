@@ -4,10 +4,10 @@ schema:
 dataSources:
   - kind: ethereum
     name: ERC20
-    network: mainnet
+    network: arbitrum-one
     source:
       abi: ERC20
-      startBlock: 17774173
+      startBlock: 130000000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
