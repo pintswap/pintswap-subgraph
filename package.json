@@ -12,6 +12,8 @@
     "prepare:celo": "mustache configs/celo.json subgraph.template.yaml > subgraph.yaml",
     "prepare:matic": "mustache configs/matic.json subgraph.template.yaml > subgraph.yaml",
     "prepare:opt": "mustache configs/optimism.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:avax": "mustache configs/avax.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:base": "mustache configs/base.json subgraph.template.yaml > subgraph.yaml",
 
     "codegen": "graph codegen",
     "build": "graph build",
@@ -20,7 +22,9 @@
     "deploy:arb": "graph deploy --product hosted-service pintswap/token-transfers-arb",
     "deploy:celo": "graph deploy --product hosted-service pintswap/token-transfers-celo",
     "deploy:matic": "graph deploy --product hosted-service pintswap/token-transfers-matic",
-    "deploy:opt": "graph deploy --product hosted-service pintswap/token-transfers-opt"
+    "deploy:opt": "graph deploy --product hosted-service pintswap/token-transfers-opt",
+    "deploy:avax": "graph deploy --product hosted-service pintswap/token-transfers-avax",
+    "deploy:base": "graph deploy --product hosted-service pintswap/token-transfers-base"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.50.1",
